@@ -1,5 +1,5 @@
-
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(MyApp());
@@ -24,17 +24,81 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final TextEditingController _passwordController = TextEditingController();
-  String imageSource = 'images/question-mark.jpg';
+  TextEditingController usernameController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
 
-  void _login() {
+  @override
+  void initState() {
+    super.initState();
+    _loadCredentials(); // Load saved credentials when the app starts
+  }
+
+  // Load saved username and password
+  _loadCredentials() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-      if (_passwordController.text == "QWERTY123") {
-        imageSource = 'images/light-bulb.jpg';
-      } else {
-        imageSource = 'images/stop-sign.jpg';
+      usernameController.text = prefs.getString('username') ?? '';
+      passwordController.text = prefs.getString('password') ?? '';
+      if (usernameController.text.isNotEmpty && passwordController.text.isNotEmpty) {
+        // Show a Snackbar when credentials are loaded
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Credentials loaded'),
+          action: SnackBarAction(
+            label: 'Undo',
+            onPressed: () {
+              setState(() {
+                usernameController.clear();
+                passwordController.clear();
+              });
+            },
+          ),
+        ));
       }
     });
+  }
+
+  // Save username and password
+  _saveCredentials() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString('username', usernameController.text);
+    prefs.setString('password', passwordController.text);
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Credentials saved')));
+  }
+
+  // Clear saved username and password
+  _clearCredentials() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.clear();
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Credentials cleared')));
+  }
+
+  // Show AlertDialog to confirm saving credentials
+  _showSaveDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Save Credentials'),
+          content: Text('Would you like to save your username and password?'),
+          actions: <Widget>[
+            TextButton(
+              child: Text('No'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _clearCredentials(); // Clear credentials if user chooses "No"
+              },
+            ),
+            TextButton(
+              child: Text('Yes'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _saveCredentials(); // Save credentials if user chooses "Yes"
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -46,26 +110,20 @@ class _LoginPageState extends State<LoginPage> {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          children: [
+          children: <Widget>[
             TextField(
-              decoration: InputDecoration(labelText: 'Login name'),
+              controller: usernameController,
+              decoration: InputDecoration(labelText: 'Username'),
             ),
-            SizedBox(height: 10),
             TextField(
-              controller: _passwordController,
+              controller: passwordController,
               decoration: InputDecoration(labelText: 'Password'),
               obscureText: true,
             ),
             SizedBox(height: 20),
             ElevatedButton(
-              onPressed: _login,
+              onPressed: _showSaveDialog, // Show save dialog when login button is clicked
               child: Text('Login'),
-            ),
-            SizedBox(height: 20),
-            Image.asset(
-              imageSource,
-              height: 300,
-              width: 300,
             ),
           ],
         ),

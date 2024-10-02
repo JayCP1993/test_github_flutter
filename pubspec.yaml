@@ -11,34 +11,22 @@ dependencies:
   flutter:
     sdk: flutter
 
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
+
+  # Add shared_preferences for saving data locally
+  shared_preferences: ^2.0.6
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
-  # The "flutter_lints" package below contains a set of recommended lints to
-  # encourage good coding practices.
   flutter_lints: ^4.0.0
 
 flutter:
 
-  # The following line ensures that the Material Icons font is included with your application,
-  # so that you can use the icons in the MaterialIcons class.
   uses-material-design: true
 
-  # To add assets to your application, add an assets section like this:
   assets:
     - images/question-mark.jpg
     - images/light-bulb.jpg
     - images/stop-sign.jpg
-
-  # If you want to use custom fonts in your project, you can add them here as shown below.
-  # fonts:
-  #   - family: CustomFont
-  #     fonts:
-  #       - asset: fonts/CustomFont-Regular.ttf
-  #       - asset: fonts/CustomFont-Bold.ttf
-  #         weight: 700

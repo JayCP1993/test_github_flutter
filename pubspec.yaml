@@ -1,31 +1,23 @@
-name: my_flutter_lab
+name: my_flutter_labs
 description: "A new Flutter project."
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
-
 version: 1.0.0+1
-
 environment:
-  sdk: ">=2.19.0 <4.0.0"
+  sdk: ">=2.18.0 <3.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
-
+  flutter_secure_storage: ^8.0.0
+  url_launcher: ^6.2.4
   cupertino_icons: ^1.0.8
-
-  # Add shared_preferences for saving data locally
-  shared_preferences: ^2.0.6
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
   flutter_lints: ^4.0.0
 
 flutter:
-
   uses-material-design: true
-
   assets:
     - images/question-mark.jpg
     - images/light-bulb.jpg

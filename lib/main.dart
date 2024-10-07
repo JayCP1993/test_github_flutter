@@ -1,129 +1,179 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'profilepage.dart'; // Import the ProfilePage file
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Login Page',
+      title: 'Flutter Demo',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        useMaterial3: true,
       ),
-      home: LoginPage(),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const MyHomePage(title: 'Flutter Demo Home Page'),
+        '/profilePage': (context) => ProfilePage(), // Route to ProfilePage
+      },
     );
   }
 }
 
-class LoginPage extends StatefulWidget {
+class MyHomePage extends StatefulWidget {
+  const MyHomePage({super.key, required this.title});
+  final String title;
+
   @override
-  _LoginPageState createState() => _LoginPageState();
+  State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
-  TextEditingController usernameController = TextEditingController();
-  TextEditingController passwordController = TextEditingController();
+class _MyHomePageState extends State<MyHomePage> {
+  final TextEditingController loginController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final storage = const FlutterSecureStorage(); // Secure storage instance
+
+  String imageSource = 'images/question-mark.jpg'; // Image for visual feedback
 
   @override
   void initState() {
     super.initState();
-    _loadCredentials(); // Load saved credentials when the app starts
+    _loadSavedCredentials();
   }
 
-  // Load saved username and password
-  _loadCredentials() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      usernameController.text = prefs.getString('username') ?? '';
-      passwordController.text = prefs.getString('password') ?? '';
-      if (usernameController.text.isNotEmpty && passwordController.text.isNotEmpty) {
-        // Show a Snackbar when credentials are loaded
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Credentials loaded'),
+  // Load saved credentials if they exist
+  Future<void> _loadSavedCredentials() async {
+    String? savedLogin = await storage.read(key: 'login');
+    String? savedPassword = await storage.read(key: 'password');
+
+    if (savedLogin != null && savedPassword != null) {
+      loginController.text = savedLogin;
+      passwordController.text = savedPassword;
+
+      // Show Snackbar that credentials are loaded
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Previous login and password loaded'),
           action: SnackBarAction(
             label: 'Undo',
             onPressed: () {
+              // Clear the text fields and delete credentials from secure storage
               setState(() {
-                usernameController.clear();
+                loginController.clear();
                 passwordController.clear();
               });
+              // Delete credentials from secure storage
+              storage.delete(key: 'login');
+              storage.delete(key: 'password');
             },
           ),
-        ));
-      }
-    });
+        ),
+      );
+    }
   }
 
-  // Save username and password
-  _saveCredentials() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setString('username', usernameController.text);
-    prefs.setString('password', passwordController.text);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Credentials saved')));
-  }
+  // Function to handle login button press
+  void _onLoginPressed() {
+    String login = loginController.text;
+    String password = passwordController.text;
 
-  // Clear saved username and password
-  _clearCredentials() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.clear();
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Credentials cleared')));
-  }
-
-  // Show AlertDialog to confirm saving credentials
-  _showSaveDialog() {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Save Credentials'),
-          content: Text('Would you like to save your username and password?'),
+          title: const Text('Save Credentials'),
+          content: const Text('Would you like to save your login and password for next time?'),
           actions: <Widget>[
             TextButton(
-              child: Text('No'),
+              child: const Text('No'),
               onPressed: () {
+                // Clear the saved credentials if the user selects "No"
+                storage.delete(key: 'login');
+                storage.delete(key: 'password');
                 Navigator.of(context).pop();
-                _clearCredentials(); // Clear credentials if user chooses "No"
               },
             ),
             TextButton(
-              child: Text('Yes'),
+              child: const Text('Yes'),
               onPressed: () {
+                // Save login and password in secure storage
+                storage.write(key: 'login', value: login);
+                storage.write(key: 'password', value: password);
                 Navigator.of(context).pop();
-                _saveCredentials(); // Save credentials if user chooses "Yes"
               },
             ),
           ],
         );
       },
-    );
+    ).then((_) {
+      // Navigate to ProfilePage, passing login or 'Guest' if empty
+      Navigator.pushNamed(
+        context,
+        '/profilePage',
+        arguments: login.isNotEmpty ? login : 'Guest',
+      );
+    });
+
+    // Simple logic to change image based on password for demo purposes
+    setState(() {
+      if (password == "QWERTY123") {
+        imageSource = 'images/light-bulb.jpg'; // Light bulb image if password is correct
+      } else {
+        imageSource = 'images/stop-sign.jpg'; // Stop sign if password is incorrect
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Login Page'),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        title: Text(widget.title),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      body: Center(
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             TextField(
-              controller: usernameController,
-              decoration: InputDecoration(labelText: 'Username'),
+              controller: loginController,
+              decoration: const InputDecoration(
+                labelText: 'Login name',
+                hintText: 'User Name',
+                border: OutlineInputBorder(),
+              ),
             ),
-            TextField(
-              controller: passwordController,
-              decoration: InputDecoration(labelText: 'Password'),
-              obscureText: true,
+            const SizedBox(height: 10),
+            Padding(
+              padding: const EdgeInsets.only(top: 16.0),
+              child: TextField(
+                controller: passwordController,
+                decoration: const InputDecoration(
+                  labelText: 'Password',
+                  hintText: 'Type Password',
+                  border: OutlineInputBorder(),
+                ),
+                obscureText: true, // Hides the password
+              ),
             ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _showSaveDialog, // Show save dialog when login button is clicked
-              child: Text('Login'),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ElevatedButton(
+                onPressed: _onLoginPressed,
+                child: const Text('Login'),
+              ),
+            ),
+            // Image for visual feedback
+            Image.asset(
+              imageSource,
+              width: 300,
+              height: 300,
             ),
           ],
         ),

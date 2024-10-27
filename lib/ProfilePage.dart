@@ -20,7 +20,13 @@ class _ProfilePageState extends State<ProfilePage> {
     _loadProfileData(); // Load profile data on init
   }
 
-  // Function to load profile data
+  @override
+  void dispose() {
+    _saveProfileData(); // Save data when page is closed
+    super.dispose();
+  }
+
+  // Function to load profile data from secure storage
   Future<void> _loadProfileData() async {
     firstNameController.text = await storage.read(key: 'firstName') ?? '';
     lastNameController.text = await storage.read(key: 'lastName') ?? '';
@@ -28,7 +34,7 @@ class _ProfilePageState extends State<ProfilePage> {
     emailController.text = await storage.read(key: 'email') ?? '';
   }
 
-  // Function to save profile data
+  // Function to save profile data into secure storage
   void _saveProfileData() async {
     await storage.write(key: 'firstName', value: firstNameController.text);
     await storage.write(key: 'lastName', value: lastNameController.text);
@@ -107,10 +113,12 @@ class _ProfilePageState extends State<ProfilePage> {
             TextField(
               controller: firstNameController,
               decoration: const InputDecoration(labelText: 'First Name'),
+              onChanged: (value) => _saveProfileData(), // Save on change
             ),
             TextField(
               controller: lastNameController,
               decoration: const InputDecoration(labelText: 'Last Name'),
+              onChanged: (value) => _saveProfileData(), // Save on change
             ),
             Row(
               children: [
@@ -118,6 +126,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   child: TextField(
                     controller: phoneController,
                     decoration: const InputDecoration(labelText: 'Phone Number'),
+                    onChanged: (value) => _saveProfileData(), // Save on change
                   ),
                 ),
                 IconButton(
@@ -136,6 +145,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   child: TextField(
                     controller: emailController,
                     decoration: const InputDecoration(labelText: 'Email Address'),
+                    onChanged: (value) => _saveProfileData(), // Save on change
                   ),
                 ),
                 IconButton(
